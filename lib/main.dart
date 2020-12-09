@@ -57,7 +57,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   ),
                 ),
               ))
-            }
+            },getPolygones()
         });
   }
 
@@ -72,36 +72,70 @@ class _MyHomePageState extends State<MyHomePage> {
             borderColor: Colors.black);
         polygonLayer.polygons.add(tempPoly);
         var points = value[i].getMaxDistance();
-        this.calcMidPoint(points,value[i]);
+        this.calcMidPoint(points, value[i],true);
         polygonLayer.polygons.add(new Polygon(
             points: points,
             borderStrokeWidth: 2.0,
             borderColor: Colors.redAccent));
+        // this.calcMidPoint(value[i].geometry.maxMin, value[i],false);
+        // polygonLayer.polygons.add(new Polygon(
+        //     points: value[i].geometry.maxMin,
+        //     borderStrokeWidth: 2.0,
+        //     borderColor: Colors.green));
       }
     });
   }
 
-  void calcMidPoint(List<LatLng> twoPoints,CustomPoly poly) {
-    var diameter=poly.calculateDistance(twoPoints[0], twoPoints[1]);
+  void calcMidPoint(List<LatLng> twoPoints, CustomPoly poly,bool value) {
+    var diameter = CustomPoly.calculateDistance(twoPoints[0], twoPoints[1]);
     double lat = (twoPoints[0].latitude + twoPoints[1].latitude) / 2;
     double long = (twoPoints[0].longitude + twoPoints[1].longitude) / 2;
     LatLng result = LatLng(lat, long);
-    markerLayer.markers.add(new Marker(
-      point: result,
-      builder: (ctx) => new Container(
-        child: new Icon(
-          Icons.pin_drop,
-          color: Colors.red,
-          size: 25.0,
-        ),
-      ),
-    ));
-    circuleLayer.circles.add(new CircleMarker(
-      point: result,
-      radius: (diameter/2)*1000,
-      color: Colors.white.withOpacity(0.5),useRadiusInMeter: true,
-      borderColor: Colors.red,borderStrokeWidth: 2.0
-    ));
+    // markerLayer.markers.add(new Marker(
+    //   point: result,
+    //   builder: (ctx) => new Container(
+    //     child: new Icon(
+    //       Icons.pin_drop,
+    //       color: Colors.blue,
+    //       size: 25.0,
+    //     ),
+    //   ),
+    // ));
+    if(value){
+      circuleLayer.circles.add(new CircleMarker(
+          point: result,
+          radius: (diameter / 2) * 1000,
+          color: Colors.red.withOpacity(0.1),
+          useRadiusInMeter: true,
+          borderColor: Colors.red,
+          borderStrokeWidth: 2.0));
+    }else{
+      circuleLayer.circles.add(new CircleMarker(
+          point: result,
+          radius: (diameter / 2) * 1000,
+          color: Colors.red.withOpacity(0.1),
+          useRadiusInMeter: true,
+          borderColor: Colors.green,
+          borderStrokeWidth: 2.0));
+    }
+    for (int i = 0; i < markerLayer.markers.length; i++) {
+      var distanceFC =
+          CustomPoly.calculateDistance(markerLayer.markers[i].point, result);
+      if (distanceFC < (diameter / 2)) {
+        var previousLocation = markerLayer.markers[i].point;
+        markerLayer.markers.removeAt(i);
+        markerLayer.markers.add(new Marker(
+          point: previousLocation,
+          builder: (ctx) => new Container(
+            child: new Icon(
+              Icons.pin_drop,
+              color: Colors.red,
+              size: 35.0,
+            ),
+          ),
+        ));
+      }
+    }
   }
 
   void _fetchAPI() {
@@ -138,6 +172,5 @@ class _MyHomePageState extends State<MyHomePage> {
       ],
     );
     getPoints();
-    getPolygones();
   }
 }

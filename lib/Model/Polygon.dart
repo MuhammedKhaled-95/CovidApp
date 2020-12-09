@@ -30,7 +30,7 @@ class CustomPoly{
     List<LatLng> resultOfPoints=[];
       for(int i=0;i<this.geometry.coordinates.length-1;i++){
         for(int j=i+1;j<this.geometry.coordinates.length;j++){
-            double result=this.calculateDistance(this.geometry.coordinates[i],this.geometry.coordinates[j]);
+            double result=calculateDistance(this.geometry.coordinates[i],this.geometry.coordinates[j]);
             if(maxDistance<result){
               maxDistance=result;
               resultOfPoints=[this.geometry.coordinates[i],this.geometry.coordinates[j]];
@@ -40,7 +40,7 @@ class CustomPoly{
       return resultOfPoints;
   }
 
-  double calculateDistance(LatLng p1,LatLng p2){
+  static double calculateDistance(LatLng p1,LatLng p2){
     var p = 0.017453292519943295;
     var c = cos;
     var a = 0.5 - c((p2.latitude - p1.latitude) * p)/2 +
@@ -53,19 +53,28 @@ class CustomPoly{
 class PolyGeometry{
   String type;
   List<LatLng> coordinates;
+  List<LatLng> maxMin;
 
   PolyGeometry({this.type, this.coordinates});
 
   factory PolyGeometry.fromJson(Map<String, dynamic> json) {
     PolyGeometry result=PolyGeometry(
         type: json['type'] as String,
-      coordinates: []
+      coordinates: [],
     );
     var coordinatesList=json['coordinates'][0];
     List<dynamic> coord= coordinatesList !=null ? List.from(coordinatesList) : null;
+    List<double> latitude=[];
+    List<double> longitude=[];
     for(int i=0;i<coord.length;i++){
-      result.coordinates.add(new LatLng(coord[i][1],coord[i][0]));
+      var point=new LatLng(coord[i][1],coord[i][0]);
+      result.coordinates.add(point);
+      latitude.add(point.latitude);
+      longitude.add(point.longitude);
     }
+    var minPoint=new LatLng(latitude.reduce((curr, next) => curr < next? curr: next),longitude.reduce((curr, next) => curr < next? curr: next));
+    var maxPoint=new LatLng(latitude.reduce((curr, next) => curr > next? curr: next),longitude.reduce((curr, next) => curr > next? curr: next));
+    result.maxMin=[minPoint,maxPoint];
     return result;
   }
 }
